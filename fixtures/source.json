@@ -1,0 +1,133 @@
+{
+  "exchanges": [
+    {
+      "path": "/descriptor",
+      "method": "GET",
+      "body": {
+        "revision": "d1",
+        "variables": [
+          {
+            "name": "temperature",
+            "type": "Grid",
+            "dimensions": [
+              {
+                "name": "time",
+                "size": 4
+              }
+            ],
+            "attributes": {
+              "units": "degree_C"
+            }
+          }
+        ],
+        "allowedNames": [
+          "temperature"
+        ]
+      },
+      "requires": {},
+      "sets": {},
+      "status": 200,
+      "query": {}
+    },
+    {
+      "path": "/subset",
+      "method": "POST",
+      "body": {
+        "revision": "d1",
+        "descriptor": {
+          "name": "temperature",
+          "shape": [
+            2
+          ]
+        },
+        "data": {
+          "array": [
+            20,
+            21
+          ],
+          "maps": {
+            "time": [
+              1,
+              2
+            ]
+          }
+        },
+        "sequenceEnd": true,
+        "truncated": false
+      },
+      "requires": {},
+      "sets": {},
+      "status": 200,
+      "query": {}
+    }
+  ],
+  "cases": {
+    "changed-shape": [
+      {
+        "path": "/descriptor",
+        "method": "GET",
+        "body": {
+          "revision": "d2",
+          "variables": [
+            {
+              "name": "temperature",
+              "type": "Grid",
+              "dimensions": [
+                {
+                  "name": "time",
+                  "size": 2
+                },
+                {
+                  "name": "depth",
+                  "size": 3
+                }
+              ],
+              "attributes": {
+                "units": "degree_C"
+              }
+            }
+          ],
+          "allowedNames": [
+            "temperature"
+          ]
+        },
+        "requires": {},
+        "sets": {},
+        "status": 200,
+        "query": {}
+      },
+      {
+        "path": "/subset",
+        "method": "POST",
+        "body": {
+          "revision": "d2",
+          "descriptor": {
+            "name": "temperature",
+            "shape": [
+              2,
+              3
+            ]
+          },
+          "data": {
+            "array": [
+              20,
+              21
+            ],
+            "maps": {
+              "time": [
+                1,
+                2
+              ]
+            }
+          },
+          "sequenceEnd": false,
+          "truncated": true
+        },
+        "requires": {},
+        "sets": {},
+        "status": 200,
+        "query": {}
+      }
+    ]
+  }
+}
