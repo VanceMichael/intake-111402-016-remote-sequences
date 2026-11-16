@@ -11,3 +11,15 @@ GET /descriptor 返回 revision、variables{name,type,dimensions,attributes}、a
 ## 收存约定
 
 当前适配器 collect(client) 返回带字符串 id 的原件行。Archive.put(rows, provenance) 按实际内容和来源生成摘要，保留不同内容。该原件归档不自动决定业务当前值、引用已解析、区间完整或远端已确认；业务投影与领取状态需要各自维护。GET /records 保留兼容，不将未知状态伪造为成功。
+
+## 约束式领取通道
+
+src/reader.mjs 提供 planSubset/claimSubset（别名 collectSubset），collect(client, request) 为便捷入口。
+
+领取请求为 {variables:[{name, ranges|start/stride/stop|按维数组}], selection?}。一维变量可用标量 start/stride/stop；多维须按维给出 ranges 对象、数组或 start/stop/stride 数组。区间按 stop 含端点计，且必须落在当前描述维度内；只为所需变量与区间领取，不额外投影其他字段。调用方只给出结构化值，适配器不拼接 DAP 表达式、URL 或查询串；来源变量名与维度名按原值放入 JSON，反引号不会进入路径。
+
+planSubset 把描述 revision、变量形状、区间、期望形状和选择条件封成带 sha256 指纹的冻结计划。claimSubset 先重新读取描述：revision、变量、类型、维度名与大小任一不符，或计划内容被改写，均以 stale-plan/invalid-plan 拒绝，不把旧切片套到新描述上；未授权变量在 planSubset 即被拒绝（not-authorized），不发出 /subset。
+
+每条结果行包含 kind=subset、revision、planFingerprint、requested（区间与期望形状）、descriptor（来源回报的 name/shape）、declaredShape、receivedShape、maps（仅请求维度的网格坐标）、data、receivedCount、expectedCount、sequenceEnd、truncated、complete、pendingRanges、problem。返回数组的嵌套维度由数据实际形状验证；网格必须有与数据范围一致的坐标。truncated=true、sequenceEnd=false、缺少这两个标记、声明/实际形状不符或到达数量不足时，complete=false，按已收前缀给出待续区间：一维为剩余 start/stop，多维无法可靠定位前缀时保留整段。已收到的数值照常保留，不用作整段成功的证明。
+
+claimSubset 返回 {revision, planFingerprint, complete, completed, rows, pending}。描述在领取中途变化（来源 412 或响应 revision 不符）抛 StalePlanError，带已完成变量、已收行与全部未完成范围。可归档的 rows 满足 Archive.put 的 id 约定，provenance 建议至少带 source、adapter、revision、planFingerprint；归档本身仍不表示区间完整。
